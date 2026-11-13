@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Gökalp — Taslak 0.5</title>
+<title>Gökalp — Taslak 0.6</title>
 <style>
 @font-face{font-family:"Pixelify Sans";font-weight:400;font-display:block;src:url(fonts/pixelify-sans-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"Pixelify Sans";font-weight:400;font-display:block;src:url(fonts/pixelify-sans-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -144,7 +144,7 @@ const FONT='"Pixelify Sans",monospace';
 /* ---------- kayıt ---------- */
 let save={};try{save=JSON.parse(localStorage.getItem('gokalp_v1')||'{}')||{};}catch(e){save={};}
 save=Object.assign({sound:true,rh:[],best:{},cleared:{}},save);
-save.best=Object.assign({tk:0,ay:0,ul:0,yd:0,co:0,gg:0},save.best);save.cleared=Object.assign({tk:false,ay:false,ul:false,yd:false,co:false,gg:false},save.cleared);
+save.best=Object.assign({tk:0,ay:0,ul:0,yd:0,co:0,gg:0,kp:0},save.best);save.cleared=Object.assign({tk:false,ay:false,ul:false,yd:false,co:false,gg:false,kp:false},save.cleared);
 function persist(){try{localStorage.setItem('gokalp_v1',JSON.stringify(save));}catch(e){}}
 
 /* ---------- çizim yardımcıları ---------- */
@@ -193,6 +193,9 @@ TILES.co.rune=tile(x=>{x.drawImage(TILES.co.fill,0,0);glyph(x,2,5,4,'#ffd060');}
 TILES.gg={};TILES.gg.fill=tile(x=>{x.fillStyle='#5a4a36';x.fillRect(0,0,16,16);const r=rnd(3);x.fillStyle='#46392a';for(let i=0;i<12;i++)x.fillRect(r()*16|0,r()*16|0,2,1);x.fillStyle='#74624a';for(let i=0;i<6;i++)x.fillRect(r()*16|0,r()*16|0,1,1);});
 TILES.gg.top=tile(x=>{x.drawImage(TILES.gg.fill,0,0);x.fillStyle='#7ac060';x.fillRect(0,0,16,3);x.fillStyle='#4a8a3a';x.fillRect(0,3,16,1);x.fillRect(2,4,1,1);x.fillRect(9,4,1,2);});
 TILES.gg.rune=TILES.gg.fill;
+TILES.kp={};TILES.kp.fill=tile(x=>{x.fillStyle='#c8a47c';x.fillRect(0,0,16,16);const r=rnd(17);x.fillStyle='#b08c66';for(let i=0;i<6;i++)x.fillRect(0,r()*16|0,16,1);x.fillStyle='#dcbc94';for(let i=0;i<8;i++)x.fillRect(r()*16|0,r()*16|0,2,1);});
+TILES.kp.top=tile(x=>{x.drawImage(TILES.kp.fill,0,0);x.fillStyle='#f0dcb8';x.fillRect(0,0,16,2);x.fillStyle='#a88660';x.fillRect(0,2,16,1);});
+TILES.kp.rune=tile(x=>{x.drawImage(TILES.kp.fill,0,0);x.fillStyle='#6a4a30';x.fillRect(5,4,6,8);x.fillRect(4,5,8,6);x.fillStyle='#3a2414';x.fillRect(6,6,4,6);});
 TILES.yd.rune=tile(x=>{x.drawImage(TILES.yd.fill,0,0);glyph(x,0,5,4,'#e0b048');});
 
 /* ---------- dünyalar ---------- */
@@ -229,8 +232,14 @@ WORLDS.gg={grav:.34,jump:-5.8,W:96,goal:93,water:{y:10.5,x0:10,x1:86},
   rects:[[0,10,10,5],[10,14,76,1],[14,10,3,1],[21,9,3,1],[28,6,2,6],[34,10,3,1],[40,9,6,6],[50,10,2,1],[55,9,2,1],[60,5,2,7],[68,10,3,1],[77,10,3,1],[86,9,10,6]],
   stars:[[15,8],[22,7],[25,12],[26,13],[29,13],[31,12],[35,8],[42,7],[44,7],[51,8],[56,7],[58,12],[61,13],[63,12],[69,8],[78,8],[88,7]],
   foes:[[43,8]],fish:[[18,12],[33,12],[52,13],[64,12]],boss:{type:'canavar',x:74,arena:64},cometV:[-1,.9]};
-const ORDER=['tk','ay','ul','yd','co','gg'];
-const GRAVK={tk:'normal',ay:'low',ul:'mid',yd:'heavy',co:'light',gg:'water'},CLEARK={tk:'clearTk',ay:'clearAy',ul:'clearUl',yd:'clearYd',co:'clearCo',gg:'clearGg'};
+WORLDS.kp={grav:.34,jump:-5.6,W:100,goal:96,dark:[40,64],
+  rects:[[0,13,12,2],[14,8,3,7],[22,6,3,9],[30,9,3,6],[34,13,6,2],[40,13,24,2],[40,0,24,10],[64,13,4,2],[87,6,13,9]],
+  caps:[[14,8,3],[22,6,3],[30,9,3]],
+  stars:[[5,10],[15,6],[23,4],[31,7],[44,11],[50,11],[54,11],[60,11],[69,4],[75,3],[81,3],[90,4],[94,4]],
+  foes:[[48,11],[57,11],[36,12]],movers:[[69,12,2,6,12,'y'],[75,9,2,4,11,'y'],[81,8,2,4,10,'y']],cometV:[-1.2,1]};
+const ORDER=['tk','ay','ul','yd','co','gg','kp'];
+const GRAVK={tk:'normal',ay:'low',ul:'mid',yd:'heavy',co:'light',gg:'water',kp:'normal'},CLEARK={tk:'clearTk',ay:'clearAy',ul:'clearUl',yd:'clearYd',co:'clearCo',gg:'clearGg',kp:'clearKp'};
+const isOpen=k=>{const i=ORDER.indexOf(k);return i<=0||!!save.cleared[ORDER[i-1]];};
 const BOSSN={yelbegen:'boss',tepegoz:'tepe',canavar:'vgc'},BOSSW={yelbegen:'yel',tepegoz:'tepeWait',canavar:'vgcWait'};
 const totalDust=()=>ORDER.reduce((a,k)=>a+(save.best[k]||0),0);
 
@@ -243,7 +252,8 @@ const SFX={jump:()=>tone(300,.15,'square',.06,300),slash:()=>tone(900,.1,'sawtoo
  hit:()=>tone(220,.16,'square',.09,-150),hurt:()=>tone(240,.3,'sawtooth',.07,-160),die:()=>[440,370,311,293].forEach((f,i)=>tone(f,.18,'triangle',.1,0,i*.16)),
  boss:()=>tone(95,.45,'sawtooth',.12,-40),clear:()=>[293.66,369.99,440,587.33,523.25,587.33].forEach((f,i)=>tone(f,.2,'triangle',.1,0,i*.13))};
 const NT={A3:220,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33};
-const MELS={co:['C5',0,'G4','E4','G4',0,'C5','D5','E4',0,'G4',0,'A4','G4','E4',0,'F4',0,'A4','C5','B4',0,'G4',0,'E4','D4','C4',0,0,0,'G4',0],
+const MELS={kp:['G4',0,'A4','B4','D5',0,'B4','A4','G4',0,'E4',0,'D4','E4','G4',0,'A4',0,'B4','A4','G4','E4','D4',0,'E4',0,'G4',0,0,0,0,0],
+ co:['C5',0,'G4','E4','G4',0,'C5','D5','E4',0,'G4',0,'A4','G4','E4',0,'F4',0,'A4','C5','B4',0,'G4',0,'E4','D4','C4',0,0,0,'G4',0],
  gg:['D4',0,0,'A4','G4',0,'F4',0,'E4',0,'D4',0,'A3',0,0,0,'D4','E4','F4',0,'A4',0,'G4','F4','E4',0,'D4',0,0,0,0,0],
  yd:['A3',0,'C4','D4','E4',0,'D4','C4','A3',0,'E4',0,'G4','E4','D4',0,'C4',0,'D4','E4','A4',0,'G4','E4','D4','C4','A3',0,0,0,'E4',0],
  ul:['E4','G4','B4',0,'A4','G4','E4',0,'D4','E4','G4','A4','B4',0,'D5',0,'C5','B4','A4','G4','E4',0,'G4',0,'A4',0,0,0,'E4',0,0,0],
@@ -255,19 +265,19 @@ function musicTick(){if(!AC||!musOn||!save.sound||uiPaused())return;const ML=MEL
  while(musNext<AC.currentTime+.2){const n=ML[musStep%ML.length];if(n)noteAt(NT[n],musNext,st*.9,'triangle',.05);if(musStep%4===0)noteAt(73.42,musNext,st*1.8,'square',.02);musStep++;musNext+=st;}}
 
 /* ---------- dil (her açılışta ilk ekranda sorulur) ---------- */
-const APP_VER='0.5.0';
+const APP_VER='0.6.0';
 const AR_L='◀︎',AR_R='▶︎';
 const L10={
 tr:{share:'Arkadaşına öner',subtitle:'Yıldızlar arasında bir alp',map:'Gök Haritası',help:'Nasıl Oynanır',settings:'Ayarlar',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',toMap:'Haritaya dön',home:'Ana menü',
  langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',
  shareWin:'Paylaş',continue:'Devam',rateQ:'Gökalp\'i beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Metin kopyalandı',shareText:'Gökalp: kılıcı göktaşı demirinden bir alpin gökten göğe piksel yolculuğu. Bir Mr. Anduv! yapımı.',
- draft:'Taslak 0.5',co:'Çolpan',gg:'Gök Göl',light:'Yerçekimi: hafif',water:'Yerçekimi: normal · su',clearCo:'Çolpan\'ın şafak kapısına ulaştın! Tan yıldızı doğdu.',clearGg:'Van Gölü Canavarı göle çekildi! Van kedisi seni kapıda bekliyor.',vgc:'VAN GÖLÜ CANAVARI',vgcWait:'Gölde bir şey kıpırdıyor…',yd:'Yedigen',heavy:'Yerçekimi: ağır',clearYd:'Tepegöz devrildi! Yedigen\'in yedi yıldızı yandı.',tepe:'TEPEGÖZ',tepeWait:'Tepegöz bekliyor!',mid:'Yerçekimi: orta',clearUl:'Yelbegen yenildi! Ülker\'in yedi yıldızı yeniden parladı.',yel:'Yelbegen bekliyor!',boss:'YELBEGEN',dust:'Yıldız tozu',hp:'CAN',normal:'Yerçekimi: normal',low:'Yerçekimi: düşük',done:'✓ tamam',soon:'Yakında',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 ada · yakında',
+ draft:'Taslak 0.6',kp:'Kapadokya',clearKp:'Balonla peribacalarının üstüne çıktın! Kapadokya göğü açıldı.',locked:'🔒 Önceki göğü tamamla',next:'▶ Sıradaki',co:'Çolpan',gg:'Gök Göl',light:'Yerçekimi: hafif',water:'Yerçekimi: normal · su',clearCo:'Çolpan\'ın şafak kapısına ulaştın! Tan yıldızı doğdu.',clearGg:'Van Gölü Canavarı göle çekildi! Van kedisi seni kapıda bekliyor.',vgc:'VAN GÖLÜ CANAVARI',vgcWait:'Gölde bir şey kıpırdıyor…',yd:'Yedigen',heavy:'Yerçekimi: ağır',clearYd:'Tepegöz devrildi! Yedigen\'in yedi yıldızı yandı.',tepe:'TEPEGÖZ',tepeWait:'Tepegöz bekliyor!',mid:'Yerçekimi: orta',clearUl:'Yelbegen yenildi! Ülker\'in yedi yıldızı yeniden parladı.',yel:'Yelbegen bekliyor!',boss:'YELBEGEN',dust:'Yıldız tozu',hp:'CAN',normal:'Yerçekimi: normal',low:'Yerçekimi: düşük',done:'✓ tamam',soon:'Yakında',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 ada · yakında',
  clearTk:'Temir Kazık\'a ulaştın! Gök yolu açıldı.',clearAy:'Hoca\'nın kuyusuna ulaştın! Ay Dede kuyudan kurtuldu.',gotDust:'Toplanan yıldız tozu',
  over1:'Yol bitmedi!',over2:'Gökalp yeniden doğrulur.',over3:'A: yeniden dene',ready:'Hazır ol!'},
 en:{share:'Tell a friend',subtitle:'A hero among the stars',map:'Sky Map',help:'How to Play',settings:'Settings',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',toMap:'Back to map',home:'Main menu',
  langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',
  shareWin:'Share',continue:'Continue',rateQ:'Enjoying Gökalp?',idea:'I have a suggestion',later:'Later',copied:'Text copied',shareText:'Gökalp: a pixel journey from sky to sky with a meteor-iron blade. A Mr. Anduv! game.',
- draft:'Draft 0.5',co:'Çolpan',gg:'Sky Lake',light:'Gravity: light',water:'Gravity: normal · water',clearCo:'You reached Çolpan\'s dawn gate! The morning star has risen.',clearGg:'The Lake Van Monster sank back into the lake! A Van cat waits for you at the gate.',vgc:'LAKE VAN MONSTER',vgcWait:'Something stirs in the lake…',yd:'Yedigen',heavy:'Gravity: heavy',clearYd:'Tepegöz has fallen! The seven stars of Yedigen are lit.',tepe:'TEPEGÖZ',tepeWait:'Tepegöz awaits!',mid:'Gravity: medium',clearUl:'Yelbegen is defeated! The seven stars of Ülker shine again.',yel:'Yelbegen awaits!',boss:'YELBEGEN',dust:'Star dust',hp:'HP',normal:'Gravity: normal',low:'Gravity: low',done:'✓ cleared',soon:'Coming soon',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 islands · coming soon',
+ draft:'Draft 0.6',kp:'Cappadocia',clearKp:'You rode the balloons above the fairy chimneys! Cappadocia\'s sky is open.',locked:'🔒 Clear the previous sky',next:'▶ Next',co:'Çolpan',gg:'Sky Lake',light:'Gravity: light',water:'Gravity: normal · water',clearCo:'You reached Çolpan\'s dawn gate! The morning star has risen.',clearGg:'The Lake Van Monster sank back into the lake! A Van cat waits for you at the gate.',vgc:'LAKE VAN MONSTER',vgcWait:'Something stirs in the lake…',yd:'Yedigen',heavy:'Gravity: heavy',clearYd:'Tepegöz has fallen! The seven stars of Yedigen are lit.',tepe:'TEPEGÖZ',tepeWait:'Tepegöz awaits!',mid:'Gravity: medium',clearUl:'Yelbegen is defeated! The seven stars of Ülker shine again.',yel:'Yelbegen awaits!',boss:'YELBEGEN',dust:'Star dust',hp:'HP',normal:'Gravity: normal',low:'Gravity: low',done:'✓ cleared',soon:'Coming soon',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 islands · coming soon',
  clearTk:'You reached Temir Kazık! The sky road is open.',clearAy:'You reached Hodja\'s well! The Moon is free.',gotDust:'Star dust collected',
  over1:'The road goes on!',over2:'Gökalp rises again.',over3:'A: try again',ready:'Get ready!'}};
 const TIPS={
@@ -278,6 +288,8 @@ tr:{kontrol:`<b>${AR_L} ${AR_R}</b> yürü · <b>A</b> zıpla (basılı tut: dah
  yercekimi:'<b>Güvercin:</b> Ay Dede\'de yerçekimi az. Havada uzun kalırsın, uzağa atlayabilirsin!',
  hedef:'<b>Hedef</b> göründü! Ulaşınca bu gök tamamlanır.',
  asansor:'<b>Gök salı</b>: üstüne çık, seni bir adadan ötekine taşır.',
+ balon:'<b>Sıcak hava balonu</b>: sepetine atla, seni yukarı taşır. Balondan balona geçerek yüksek kayalığa çık!',
+ karanlik:'<b>Yeraltı şehri</b>: içerisi karanlık, kılıcının ışığı yolunu gösterir. Gölgeler pusuda!',
  isik:'<b>Işık taşı</b>: kılıçla vur, önünde ışık köprüsü kurulur. Köprü kısa sürer, yanıp sönmeye başlayınca acele et!',
  yuzme:'<b>Su</b>: suda <b>A</b> ile kulaç at. Yüzeydeyken <b>A</b> ile sudan fırla. Bazı yollar suyun altından geçer, yıldız tozu da orada saklı.',
  canavar:'<b>Güvercin:</b> <b>Van Gölü Canavarı</b>! Su topu tükürür, sonra başını suya yaslayıp dinlenir: o an başına kılıçla vur. Salların üstünde kal!',
@@ -291,13 +303,15 @@ en:{kontrol:`<b>${AR_L} ${AR_R}</b> walk · <b>A</b> jump (hold: higher) · <b>B
  yercekimi:'<b>Dove:</b> Gravity is low on the Moon. You stay airborne longer and can leap far!',
  hedef:'The <b>goal</b> is in sight! Reach it to clear this sky.',
  asansor:'<b>Sky raft</b>: step on it to ride from one island to the next.',
+ balon:'<b>Hot-air balloon</b>: jump into the basket and it lifts you. Hop from balloon to balloon to reach the high cliff!',
+ karanlik:'<b>Underground city</b>: it\'s dark inside; your blade\'s glow lights the way. Shades lie in wait!',
  isik:'<b>Light stone</b>: strike it and a light bridge appears ahead. It fades fast; hurry when it starts to blink!',
  yuzme:'<b>Water</b>: press <b>A</b> to swim. At the surface, <b>A</b> leaps out. Some paths run underwater, with star dust hidden there.',
  canavar:'<b>Dove:</b> The <b>Lake Van Monster</b>! It spits water balls, then rests its head on the water: strike it then. Stay on the rafts!',
  han:'<b>Han fire</b>: light it! If you fall, you restart from the last fire you lit. Light all seven and Yedigen\'s stars shine.',
  tepegoz:'<b>Dove:</b> <b>Tepegöz</b>! Your blade can\'t pierce its body. When it charges into a wall it gets dazed and lowers its head: strike its single eye!',
  yelbegen:'<b>Dove:</b> <b>Yelbegen</b>! Strike its heads with your sword, two blows each. Watch the rocks; your sword breaks them too.'}};
-const TIP_ORDER=['kontrol','golge','kuyruk','toz','yercekimi','asansor','han','isik','yuzme','yelbegen','tepegoz','canavar','hedef'];
+const TIP_ORDER=['kontrol','golge','kuyruk','toz','yercekimi','asansor','han','isik','yuzme','balon','karanlik','yelbegen','tepegoz','canavar','hedef'];
 let LANG=save.lang||'tr';
 const t=k=>(L10[LANG][k]??L10.tr[k]??k);
 const seen=k=>save.rh.includes(k);
@@ -310,7 +324,8 @@ function refreshUI(){
  $('selDust').textContent=`✦ ${t('dust')}: ${totalDust()} / 1923`;
  const box=$('selRows');box.innerHTML='';
  ORDER.forEach(k=>{const w=WORLDS[k],b=document.createElement('button');b.className='mb wrow';b.type='button';
-  b.innerHTML=`<span class="n">${t(k)}</span><span class="s">${t(GRAVK[k])} · ✦ ${save.best[k]||0}/${w.stars.length}${save.cleared[k]?' · '+t('done'):''}</span>`;
+  const op=isOpen(k),nx=op&&!save.cleared[k];b.disabled=!op;
+  b.innerHTML=!op?`<span class="n">${t(k)}</span><span class="s">${t('locked')}</span>`:`<span class="n">${nx?t('next')+' · ':''}${t(k)}</span><span class="s">${t(GRAVK[k])} · ✦ ${save.best[k]||0}/${w.stars.length}${save.cleared[k]?' · '+t('done'):''}</span>`;
   b.addEventListener('click',()=>{initAudio();tone(660,.05,'square',.04);startGame(k);});box.appendChild(b);});
 }
 /* ---------- platform ---------- */
@@ -342,7 +357,9 @@ function coachTick(){
  if(!seen('golge')&&foes.some(f=>!f.dead&&onScr(f.x)))return showTip('golge');
  if(!seen('kuyruk')&&comets.some(c=>c.y>24&&onScr(c.x)))return showTip('kuyruk');
  if(!seen('toz')&&stars.some(s=>!s.got&&onScr(s.x)))return showTip('toz');
- if(!seen('asansor')&&movers.some(m=>onScr(m.x)))return showTip('asansor');
+ if(!seen('balon')&&movers.some(m=>m.ax==='y'&&onScr(m.x)))return showTip('balon');
+ if(!seen('karanlik')&&cur.dark&&pl.x>cur.dark[0]*T-8)return showTip('karanlik');
+ if(!seen('asansor')&&movers.some(m=>m.ax!=='y'&&onScr(m.x)))return showTip('asansor');
  if(bossFight&&boss&&!seen(boss.type))return showTip(boss.type);
  if(!seen('han')&&hans.some(h=>onScr(h.x)))return showTip('han');
  if(!seen('isik')&&crystals.some(q=>onScr(q.x)))return showTip('isik');
@@ -485,7 +502,7 @@ function startLevel(k,keep){if(!keep||k!==lvKey){lit=[];checkX=null;}lvKey=k;cur
  stars=cur.stars.map(([x,y])=>({x:x*T+3,y:y*T+3,got:false}));
  foes=cur.foes.map(([x,y],i)=>({x0:x*T+2,y0:y*T+3,x:x*T+2,y:y*T+3,t:i*40,dead:false}));
  comets=[];parts=[];pl={x:32,y:13*T-22,w:10,h:22,vx:0,vy:0,face:1,onG:false,atk:0,inv:0,kb:0,kbDir:1,hp:6,buf:0,coy:0,jh:0,anim:0,jumped:false,swung:false};
- movers=(cur.movers||[]).map(([x,y,w,a,b])=>({x:x*T,y:y*T,w:w*T,a:a*T,b:b*T,vx:.7,dx:0}));rocks=[];bossFight=false;shake=0;
+ movers=(cur.movers||[]).map(([x,y,w,a,b,ax],i)=>({x:x*T,y:y*T,w:w*T,a:a*T,b:b*T,ax:ax||'x',vx:.7,vy:ax==='y'?(i%2?.45:-.45):0,dx:0,dy:0}));rocks=[];bossFight=false;shake=0;
  boss=!cur.boss?null:cur.boss.type==='tepegoz'?{type:'tepegoz',x:cur.boss.x*T,y:12*T-44,w:30,h:44,hp:3,max:3,inv:0,face:-1,anim:0,t:0,vy:0,vx:0,st:'walk',stT:0,dead:false}
   :{type:'yelbegen',x:cur.boss.x*T,y:12*T-40,w:28,h:40,hp:6,max:6,inv:0,face:-1,anim:0,t:0,vy:0,dead:false};
  bset.clear();bridges=(cur.bridges||[]).map(([x,y,w])=>({x,y,w,t:0}));crystals=(cur.crystals||[]).map(([x,y,b])=>({x:x*T+3,y:y*T+3,b,cool:0}));
@@ -578,11 +595,11 @@ function updatePlay(E){
  for(const br of bridges)if(br.t>0){br.t--;if(br.t===0)setBridge(br,0);}
  if(E.bP&&pl.atk<=0){pl.atk=14;pl.swung=true;SFX.slash();}
  if(pl.atk>0)pl.atk--;if(pl.inv>0)pl.inv--;
- for(const m of movers){const ox=m.x;m.x+=m.vx;if(m.x<m.a){m.x=m.a;m.vx=Math.abs(m.vx);}if(m.x>m.b){m.x=m.b;m.vx=-Math.abs(m.vx);}m.dx=m.x-ox;}
- if(pl.mover)pl.x+=pl.mover.dx;
+ for(const m of movers){if(m.ax==='y'){const oy=m.y;m.y+=m.vy;if(m.y<m.a){m.y=m.a;m.vy=Math.abs(m.vy);}if(m.y>m.b){m.y=m.b;m.vy=-Math.abs(m.vy);}m.dy=m.y-oy;m.dx=0;continue;}const ox=m.x;m.x+=m.vx;if(m.x<m.a){m.x=m.a;m.vx=Math.abs(m.vx);}if(m.x>m.b){m.x=m.b;m.vx=-Math.abs(m.vx);}m.dx=m.x-ox;m.dy=0;}
+ if(pl.mover){pl.x+=pl.mover.dx;pl.y+=pl.mover.dy;}
  moveX();if(bossFight&&pl.x<cur.boss.arena*T){pl.x=cur.boss.arena*T;pl.vx=0;}
- const prevB=pl.y+pl.h;moveY();pl.mover=null;
- if(pl.vy>=0)for(const m of movers){if(pl.x+pl.w>m.x+1&&pl.x<m.x+m.w-1&&prevB<=m.y+1&&pl.y+pl.h>=m.y){pl.y=m.y-pl.h;pl.vy=0;pl.onG=true;pl.mover=m;break;}}
+ const prevB=pl.y+pl.h,fallV=pl.vy;moveY();pl.mover=null;if(pl.onG&&fallV>3.5)tone(120,.06,'triangle',.05,-40);
+ if(pl.vy>=0)for(const m of movers){if(pl.x+pl.w>m.x+1&&pl.x<m.x+m.w-1&&prevB<=m.y+2+Math.abs(m.dy)&&pl.y+pl.h>=m.y){pl.y=m.y-pl.h;pl.vy=0;pl.onG=true;pl.mover=m;break;}}
  pl.anim+=Math.abs(pl.vx)>.2?1:0;
  if(shake>0)shake--;
  if(pl.y>H+30){die();return;}
@@ -683,10 +700,18 @@ function drawCanavar(c){const b=boss;if(!b||b.dead||b.neck<2)return;const wt=cur
  R(x+(f>0?4:-6),hy-11,4,4,'#ffd040');R(x+(f>0?5:-5),hy-10,2,3,'#101018');if(b.st==='rest'){R(x+(f>0?3:-7),hy-9,6,1,'#101018');}
  for(const r of drops){R(r.x-c-3,r.y-3,6,6,'#7fd8f0');R(r.x-c-2,r.y-2,2,2,'#ffffff');}}
 function drawVanKedisi(c){const x=Math.round(90*T-c),y=9*T;if(x<-20||x>W)return;R(x,y-8,10,7,'#f4f4f0');R(x+7,y-12,6,6,'#f4f4f0');R(x+7,y-14,2,2,'#f4f4f0');R(x+11,y-14,2,2,'#f4f4f0');R(x+8,y-10,1,1,'#3a7ad0');R(x+11,y-10,1,1,'#d0a020');R(x-3,y-7+Math.round(Math.sin(frame*.1)),3,2,'#d8a050');R(x+1,y-1,2,1,'#c8c8c0');R(x+6,y-1,2,1,'#c8c8c0');}
+function bgKp(c,top){const g=ctx.createLinearGradient(0,-top,0,H);g.addColorStop(0,'#2a3a6a');g.addColorStop(.6,'#c87a7a');g.addColorStop(1,'#f0b880');ctx.fillStyle=g;ctx.fillRect(0,-top,W,VH);ctx.globalAlpha=.4;starfield(c,top);ctx.globalAlpha=1;
+ for(let i=0;i<5;i++){const x=Math.round(((i*97+frame*.15-c*.1)%(W+60)+W+60)%(W+60))-30,y=40+(i*37)%70+Math.round(Math.sin(frame*.02+i)*3),col=['#c83a28','#2a8a5a','#f0c040','#2a4aa0','#e07a3a'][i];ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(x,y,5,6,0,0,7);ctx.fill();R(x-1,y+7,3,2,'#5a3a1a');}
+ const o=Math.round(c*.35);for(let i=-1;i<W/34+2;i++){const x=i*34-(o%34),hh=40+((i+Math.floor(o/34))*29%4)*12;R(x,210-hh,12,hh,'#8a6a5a');ctx.fillStyle='#5a4040';ctx.beginPath();ctx.moveTo(x-4,212-hh);ctx.lineTo(x+6,198-hh);ctx.lineTo(x+16,212-hh);ctx.fill();}R(0,208,W,40,'#8a6a5a');}
+function drawCaps(c){for(const [x,y,w] of (cur.caps||[])){const px=x*T-c,py=y*T;if(px<-60||px>W+20)continue;ctx.fillStyle='#6a5040';ctx.beginPath();ctx.moveTo(px-6,py+2);ctx.lineTo(px+w*T/2,py-20);ctx.lineTo(px+w*T+6,py+2);ctx.fill();R(px-6,py,w*T+12,3,'#4a3428');R(px+w*T/2-3,py+20,6,8,'#3a2414');R(px+w*T/2-2,py+21,4,6,'#ffcf70');}}
+function drawDark(c){const d=cur.dark;if(!d)return;const x0=Math.max(0,d[0]*T-c),x1=Math.min(W,d[1]*T-c);if(x1<=x0)return;const px=pl.x+5-c,py=pl.y+10;
+ const g=ctx.createRadialGradient(px,py,14,px,py,70);g.addColorStop(0,'rgba(5,4,10,0)');g.addColorStop(1,'rgba(5,4,10,.86)');ctx.fillStyle=g;ctx.fillRect(x0,0,x1-x0,H);
+ for(let i=d[0]+3;i<d[1];i+=7){const lx=i*T-c;if(lx<x0||lx>x1)continue;R(lx,150,3,5,'#3a2414');R(lx,146,3,4,'#ffb040');ctx.fillStyle='rgba(255,180,80,.15)';ctx.beginPath();ctx.arc(lx+1,148,16,0,7);ctx.fill();}}
 function drawHans(c){for(const h of hans){const x=Math.round(h.x-c),y=h.y;if(x<-20||x>W+20)continue;R(x-7,y-6,14,6,'#7a6650');R(x-8,y-7,16,2,'#d8b878');R(x-2,y-2,4,2,'#3e3228');
  if(h.on){const f=(frame>>2)%3;R(x-4,y-12-f,8,6+f,'#ff8a20');R(x-2,y-16-f,4,6,'#ffd060');R(x-1,y-18-f,2,3,'#fff6c0');}else{R(x-4,y-8,8,2,'#4a2a1a');R(x-1,y-9,2,1,'#c04010');}}}
 function drawGoal(c){if(boss&&!boss.dead)return;const gx=cur.goal*T-c,gy=13*T;
  if(lvKey==='tk'){R(gx+4,gy-96,8,96,'#5b6684');for(let y=gy-90;y<gy;y+=12)R(gx+4,y,8,1,'#2e3850');R(gx+3,gy-60,10,2,'#f0c040');R(gx+3,gy-30,10,2,'#f0c040');bigStar(gx+8,gy-106,7+Math.round(Math.sin(frame*.1)*2),'#f0c040');}
+ else if(lvKey==='kp'){const y0=6*T;R(gx-2,y0-30,4,30,'#6a4a30');ctx.fillStyle='#c83a28';ctx.beginPath();ctx.moveTo(gx+2,y0-30);ctx.lineTo(gx+20,y0-25);ctx.lineTo(gx+2,y0-20);ctx.fill();bigStar(gx+11,y0-25,2,'#ffffff');bigStar(gx+8,y0-46,5+((frame>>4)%2),'#f0c040');}
  else if(lvKey==='co'){const y0=13*T;R(gx-4,y0-64,8,64,'#c87a6a');R(gx+20,y0-64,8,64,'#c87a6a');ctx.strokeStyle='#ffd8a8';ctx.lineWidth=4;ctx.beginPath();ctx.arc(gx+12,y0-64,16,Math.PI,0);ctx.stroke();ctx.fillStyle='rgba(255,240,190,'+(.3+.15*Math.sin(frame*.08))+')';ctx.fillRect(gx+4,y0-64,16,64);bigStar(gx+12,y0-86,6,'#fff6d0');}
  else if(lvKey==='gg'){const y0=9*T;R(gx,y0-40,5,40,'#7a6650');R(gx+19,y0-40,5,40,'#7a6650');R(gx-3,y0-45,30,6,'#d8b878');R(gx+5,y0-38,14,38,'rgba(160,230,255,'+(.25+.15*Math.sin(frame*.1))+')');}
  else if(lvKey==='yd'){const y0=12*T;R(gx,y0-56,6,56,'#7a6650');R(gx+22,y0-56,6,56,'#7a6650');R(gx-3,y0-62,34,7,'#d8b878');R(gx+6,y0-54,16,54,'rgba(255,208,96,'+(.25+.15*Math.sin(frame*.1))+')');glyph(ctx,0,gx+12,y0-60,'#7a1c14');}
@@ -707,8 +732,10 @@ function drawHUD(){R(0,0,W,15,'rgba(5,8,26,.78)');R(0,15,W,1,'#b8902e');txt(t('h
  bigStar(Math.round(W/2)-26,8,3,'#f0c040');txt(String(totalDust()+levelDust).padStart(4,'0')+' / 1923',Math.round(W/2)-18,3,'#f0c040');ctx.drawImage(HEAD,W-30,3);txt('× '+Math.max(0,lives),W-18,3,'#fff');}
 function drawWorld(){const c=Math.round(cam),top=VH-H;ctx.save();ctx.translate(0,top);
  if(shake>0)ctx.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*3));
- if(lvKey==='tk')bgTk(c,top);else if(lvKey==='ul')bgUl(c,top);else if(lvKey==='yd')bgYd(c,top);else if(lvKey==='co')bgCo(c,top);else if(lvKey==='gg')bgGg(c,top);else bgAy(c,top);drawWater(c,false);drawTiles(c);drawCrystals(c);drawHans(c);drawGoal(c);if(lvKey==='gg'&&boss&&boss.dead)drawVanKedisi(c);drawCanavar(c);
- for(const m of movers){const x=Math.round(m.x-c);R(x,m.y,m.w,4,'#d8d0ff');R(x,m.y+4,m.w,3,'#6a5a92');R(x+4,m.y+7,m.w-8,2,'#3a2c5e');}
+ if(lvKey==='tk')bgTk(c,top);else if(lvKey==='ul')bgUl(c,top);else if(lvKey==='yd')bgYd(c,top);else if(lvKey==='co')bgCo(c,top);else if(lvKey==='gg')bgGg(c,top);else if(lvKey==='kp')bgKp(c,top);else bgAy(c,top);drawWater(c,false);drawTiles(c);drawCaps(c);drawCrystals(c);drawHans(c);drawGoal(c);if(lvKey==='gg'&&boss&&boss.dead)drawVanKedisi(c);drawCanavar(c);
+ for(const m of movers){const x=Math.round(m.x-c);if(m.ax==='y'){const y=Math.round(m.y),cx=x+m.w/2;R(x+2,y,m.w-4,8,'#8a5a2a');R(x+2,y,m.w-4,2,'#c08a4a');R(x+3,y-14,1,14,'#5a3a1a');R(x+m.w-4,y-14,1,14,'#5a3a1a');
+  ctx.fillStyle='#c83a28';ctx.beginPath();ctx.ellipse(cx,y-30,17,19,0,0,7);ctx.fill();ctx.fillStyle='#f0c040';ctx.fillRect(cx-4,y-48,8,34);ctx.fillStyle='#2a4aa0';ctx.fillRect(cx-14,y-32,28,4);R(cx-5,y-14,10,3,'#8a2a1a');if(m.vy<0&&(frame>>2)%2)R(cx-2,y-12,4,3,'#ffb040');continue;}
+  R(x,m.y,m.w,4,'#d8d0ff');R(x,m.y+4,m.w,3,'#6a5a92');R(x+4,m.y+7,m.w-8,2,'#3a2c5e');}
  for(const s of stars){if(s.got)continue;const x=s.x-c+5,y=s.y+5+Math.round(Math.sin(frame*.1+s.x));const r=2+((frame>>3)+s.x)%2;R(x-r,y,r*2+1,1,'#f0c040');R(x,y-r,1,r*2+1,'#f0c040');R(x,y,1,1,'#fff');}
  for(const f of foes)if(!f.dead)ctx.drawImage(GOLGE,Math.round(f.x-c),Math.round(f.y));
  if(boss&&!boss.dead&&boss.type!=='canavar'){if(boss.type==='tepegoz')drawOutlined(drawTepegoz,boss,Math.round(boss.x-c),64,72);else drawBossHD(Object.assign({},boss,{hp:Math.ceil(boss.hp/2)}),Math.round(boss.x-c));}
@@ -716,7 +743,7 @@ function drawWorld(){const c=Math.round(cam),top=VH-H;ctx.save();ctx.translate(0
  for(const k of comets){for(let i=6;i>0;i--){ctx.globalAlpha=.15*(7-i);R(k.x-c-i*k.vx*3-1,k.y-i*k.vy*3-1,3,3,i>3?'#f08020':'#ffd040');}ctx.globalAlpha=1;R(k.x-c-2,k.y-2,5,5,'#fff6d0');}
  if(!(pl.inv>0&&(frame>>2)%2&&state==='play'))drawHero(pl.x-c,pl.y,pl.face,(state==='dying'||!pl.onG)?'j':(Math.abs(pl.vx)>.2?((pl.anim>>3)%2?'a':'b'):'a'),state==='play'?pl.atk:0);
  ctx.drawImage(DOVE[pl.face][(frame>>3)%2],Math.round(dove.x-c),Math.round(dove.y));
- drawWater(c,true);
+ drawWater(c,true);drawDark(c);
  for(const q of parts){ctx.globalAlpha=Math.min(1,q.l/15);R(q.x-c,q.y,2,2,q.c);}ctx.globalAlpha=1;
  ctx.restore();drawHUD();
  if(bossFight&&boss){R(W/2-112,19,224,11,'rgba(5,8,26,.8)');txt(t(BOSSN[boss.type]),W/2-108,20,'#e07a5a',8);const sw=Math.floor(84/boss.max);for(let i=0;i<boss.max;i++)R(W/2+22+i*sw,21,sw-2,7,i<boss.hp?'#e07a5a':'#3a2020');}}
@@ -738,7 +765,7 @@ let acc=0,last=performance.now();
 function loop(now){requestAnimationFrame(loop);girisTick();let dt=now-last;last=now;if(dt>100)dt=100;acc+=dt;
  while(acc>=1000/60){acc-=1000/60;if(!uiPaused())update();}
  draw();musicTick();}
-window.__gokalp={get state(){return state;},get pl(){return pl;},get boss(){return boss;},get hans(){return hans;},startGame,inp,kaynak,get save(){return save;}};
+window.__gokalp={get state(){return state;},get pl(){return pl;},get boss(){return boss;},get hans(){return hans;},get movers(){return movers;},startGame,inp,kaynak,get save(){return save;}};
 function boot(){applyLang();yerlesTekrar();show('ovLang');requestAnimationFrame(loop);}
 (document.fonts&&document.fonts.load?Promise.race([Promise.all([document.fonts.load('8px "Pixelify Sans"','ıİşŞğĞçÇöÖüÜ'),document.fonts.load('700 8px "Pixelify Sans"','ıİşŞğĞçÇöÖüÜ')]),new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot,boot);
 })();
