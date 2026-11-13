@@ -3,7 +3,7 @@
 Fiyat her mağazada **1,99 $** (ücretli uygulama; reklam ve uygulama içi satın alma yok). Ad her mağazada aynı: **Gökalp**.
 
 ## Hazır olanlar
-- Oyun taslağı 0.3: Temir Kazık (normal yerçekimi), Ay Dede (düşük yerçekimi) ve Ülker (orta yerçekimi, 7 ada, gök salları, ilk boss Yelbegen) dünyaları, kılıç, Erlik gölgeleri, kuyruklu yıldızlar, yıldız tozu (hedef 1923), mekanik güvercin rehberi, Gök Haritası
+- Oyun taslağı 0.4: Temir Kazık (normal yerçekimi), Ay Dede (düşük yerçekimi), Ülker (orta yerçekimi, 7 ada, gök salları, boss Yelbegen) ve Yedigen (ağır yerçekimi, 7 han ateşi = ara kayıt, boss Tepegöz) dünyaları, kılıç, Erlik gölgeleri, kuyruklu yıldızlar, yıldız tozu (hedef 1923), mekanik güvercin rehberi, Gök Haritası
 - Tulpar'dan gelen kabuk: klasik kumanda (Kurt Yolu ölçüsü), dil sorusu her açılışta, Nasıl Oynanır, Ayarlar (dil, ses, puan, Bize yaz, Verilerimi sil), Mola, paylaş, oyun kolu ve klavye
 - Capacitor projesi: Android ve iOS `com.anduv.gokalp`, ikonlar ve açılış ekranları üretildi
 - İş akışları: iOS (TestFlight), Android (.aab), Masaüstü (Steam), Quest (APK) — her biri yayın öncesi kontrolle başlar
@@ -23,7 +23,8 @@ Fiyat her mağazada **1,99 $** (ücretli uygulama; reklam ve uygulama içi satı
 
 ## Yol haritası
 - 0.3: Ülker (7 ada, gök salları), ilk boss Yelbegen (Tulpar'daki çizimin aynısı) — tamam
-- 0.4: Yedigen (yedi han, yedi boss), Çolpan (ışık bulmacaları), Gök Göl (Van Gölü Canavarı)
+- 0.4: Yedigen (yedi han ateşi, boss Tepegöz) — tamam
+- 0.5: Çolpan (ışık bulmacaları), Gök Göl (Van Gölü Canavarı)
 - 1.0: Mağazalara ilk sürüm; 1923 yıldız tozunun tamamı
 - VR: sıfır yerçekimli bölümler Meta Quest'te maket görünümüyle
 - Saat: "Gökalp: Yıldız Tozu" (`store/saat-plani.md`)
