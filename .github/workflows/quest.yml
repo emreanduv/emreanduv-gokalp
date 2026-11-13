@@ -1,0 +1,86 @@
+name: Gokalp (Meta Quest APK)
+# Quest'te büyük 2D pencere (panel) olarak açılır. emreanduv.github.io/gokalp PWA'sını Meta'nın bubblewrap'iyle Quest uygulamasına (TWA) paketler.
+# İmzasız APK yayınlanır; imza (gokalp-quest.jks) depoya girmez, yerelde atılır.
+on:
+  workflow_dispatch:
+    inputs:
+      version_name: { description: "Sürüm adı", default: "1.0.0" }
+      version_code: { description: "Sürüm kodu", default: "1" }
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i -g @meta-quest/bubblewrap-cli@1.24.1
+      - name: Bubblewrap ayarları ve TWA tanımı
+        run: |
+          mkdir -p ~/.bubblewrap proje
+          # bubblewrap eski SDK düzenini (tools/) arar: komut satırı araçlarını oraya bağla; build-tools 34.0.0 gerekli
+          [ -e "$ANDROID_HOME/tools" ] || sudo ln -s "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/tools"
+          [ -d "$ANDROID_HOME/build-tools/34.0.0" ] || yes | sudo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;34.0.0" >/dev/null
+          ls "$ANDROID_HOME" "$ANDROID_HOME/build-tools"
+          printf '{"jdkPath":"%s","androidSdkPath":"%s"}' "$JAVA_HOME" "$ANDROID_HOME" > ~/.bubblewrap/config.json
+          cat > proje/twa-manifest.json <<JSON
+          {
+            "packageId": "com.anduv.gokalp.quest",
+            "host": "emreanduv.github.io",
+            "name": "Gokalp",
+            "launcherName": "Gokalp",
+            "display": "standalone",
+            "themeColor": "#05081a",
+            "navigationColor": "#05081a",
+            "navigationColorDark": "#05081a",
+            "navigationDividerColor": "#05081a",
+            "navigationDividerColorDark": "#05081a",
+            "backgroundColor": "#05081a",
+            "enableNotifications": false,
+            "startUrl": "/gokalp/index.html",
+            "iconUrl": "https://emreanduv.github.io/gokalp/ikon-512.png",
+            "maskableIconUrl": "https://emreanduv.github.io/gokalp/ikon-512.png",
+            "splashScreenFadeOutDuration": 300,
+            "signingKey": { "path": "./android.keystore", "alias": "android" },
+            "appVersionName": "${{ inputs.version_name }}",
+            "appVersionCode": ${{ inputs.version_code }},
+            "shortcuts": [],
+            "generatorApp": "bubblewrap-cli",
+            "webManifestUrl": "https://emreanduv.github.io/gokalp/manifest.webmanifest",
+            "fallbackType": "customtabs",
+            "features": {},
+            "alphaDependencies": { "enabled": false },
+            "enableSiteSettingsShortcut": false,
+            "isChromeOSOnly": false,
+            "isMetaQuest": true,
+            "fullScopeUrl": "https://emreanduv.github.io/gokalp/",
+            "minSdkVersion": 29,
+            "orientation": "any",
+            "fingerprints": [],
+            "additionalTrustedOrigins": [],
+            "retainedBundles": [],
+            "appVersion": "${{ inputs.version_name }}"
+          }
+          JSON
+          cat proje/twa-manifest.json
+      - name: Projeyi üret ve imzasız derle
+        working-directory: proje
+        run: |
+          (yes | bubblewrap update --skipVersionUpgrade --manifest=./twa-manifest.json) 2>&1 | tee /tmp/gunluk.txt || true
+          ls | tee -a /tmp/gunluk.txt
+          (yes | bubblewrap build --skipSigning --manifest=./twa-manifest.json) 2>&1 | tee -a /tmp/gunluk.txt || true
+          test -f app-release-unsigned-aligned.apk   # yes'in kırık boru çıkışı hata sayılmasın; asıl ölçüt APK
+      - name: Günlüğü quest-gunluk dalına yaz
+        if: always()
+        run: |
+          mkdir -p /tmp/g && cp /tmp/gunluk.txt /tmp/g/ 2>/dev/null || echo yok > /tmp/g/gunluk.txt; cd /tmp/g
+          git init -q -b quest-gunluk && git config user.name gha && git config user.email gha@x && git add . && git commit -qm gunluk
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" quest-gunluk
+      - name: Yayınla
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          T=quest-${{ inputs.version_name }}-${{ inputs.version_code }}-${{ github.run_number }}
+          cp proje/app-release-unsigned-aligned.apk "/tmp/gokalp-${{ inputs.version_name }}-${{ inputs.version_code }}-unsigned.apk"
+          gh release create "$T" -R "${{ github.repository }}" --title "Gokalp ${{ inputs.version_name }} (${{ inputs.version_code }}) imzasız" --notes "Meta Quest imzasız APK + apksigner.jar (yerelde imza için)" "/tmp/gokalp-${{ inputs.version_name }}-${{ inputs.version_code }}-unsigned.apk" "$ANDROID_HOME/build-tools/34.0.0/lib/apksigner.jar"

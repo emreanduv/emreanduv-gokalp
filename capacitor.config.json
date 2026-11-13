@@ -1,0 +1,8 @@
+{
+  "appId": "com.anduv.gokalp",
+  "appName": "Gökalp",
+  "webDir": "www",
+  "backgroundColor": "#05081a",
+  "android": { "backgroundColor": "#05081a" },
+  "ios": { "backgroundColor": "#05081a", "contentInset": "never" }
+}

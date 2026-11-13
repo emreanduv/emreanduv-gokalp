@@ -1,0 +1,25 @@
+{
+  "name": "gokalp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gökalp - piksel aksiyon-platform oyunu (iOS + Android + Steam + Meta Quest)",
+  "scripts": {
+    "serve": "npx http-server . -p 8771 -c-1",
+    "sync": "npx cap sync",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios",
+    "gorseller": "python3 araclar/gorseller.py",
+    "ikonlar": "capacitor-assets generate --ios --android --iconBackgroundColor '#1a2350' --iconBackgroundColorDark '#1a2350' --splashBackgroundColor '#05081a' --splashBackgroundColorDark '#05081a'"
+  },
+  "dependencies": {
+    "@capacitor-community/in-app-review": "^8.0.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}
