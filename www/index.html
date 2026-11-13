@@ -143,7 +143,8 @@ const FONT='"Pixelify Sans",monospace';
 
 /* ---------- kayıt ---------- */
 let save={};try{save=JSON.parse(localStorage.getItem('gokalp_v1')||'{}')||{};}catch(e){save={};}
-save=Object.assign({sound:true,rh:[],best:{tk:0,ay:0},cleared:{tk:false,ay:false}},save);
+save=Object.assign({sound:true,rh:[],best:{tk:0,ay:0,ul:0},cleared:{tk:false,ay:false,ul:false}},save);
+save.best=Object.assign({tk:0,ay:0,ul:0},save.best);save.cleared=Object.assign({tk:false,ay:false,ul:false},save.cleared);
 function persist(){try{localStorage.setItem('gokalp_v1',JSON.stringify(save));}catch(e){}}
 
 /* ---------- çizim yardımcıları ---------- */
@@ -181,6 +182,9 @@ TILES.tk.rune=tile(x=>{x.drawImage(TILES.tk.fill,0,0);glyph(x,1,5,4,'#c79a34');}
 TILES.ay.fill=tile(x=>{x.fillStyle='#9a9eab';x.fillRect(0,0,16,16);const r=rnd(7);x.fillStyle='#80848f';for(let i=0;i<12;i++)x.fillRect(r()*16|0,r()*16|0,1,1);x.fillStyle='#b4b8c4';for(let i=0;i<8;i++)x.fillRect(r()*16|0,r()*16|0,1,1);});
 TILES.ay.top=tile(x=>{x.drawImage(TILES.ay.fill,0,0);x.fillStyle='#e2e6ee';x.fillRect(0,0,16,2);x.fillStyle='#c4c8d2';x.fillRect(0,2,16,1);x.fillStyle='#80848f';x.fillRect(5,4,5,1);x.fillRect(4,5,1,2);x.fillRect(10,5,1,2);x.fillRect(5,7,5,1);});
 TILES.ay.rune=TILES.ay.fill;
+TILES.ul={};TILES.ul.fill=tile(x=>{x.fillStyle='#463664';x.fillRect(0,0,16,16);const r=rnd(11);x.fillStyle='#34284e';for(let i=0;i<14;i++)x.fillRect(r()*16|0,r()*16|0,2,1);x.fillStyle='#6a5a92';for(let i=0;i<8;i++)x.fillRect(r()*16|0,r()*16|0,1,1);});
+TILES.ul.top=tile(x=>{x.drawImage(TILES.ul.fill,0,0);x.fillStyle='#d8d0ff';x.fillRect(0,0,16,2);x.fillStyle='#9a8ad0';x.fillRect(0,2,16,1);x.fillStyle='#ffffff';x.fillRect(3,0,2,1);x.fillRect(11,0,1,1);});
+TILES.ul.rune=tile(x=>{x.drawImage(TILES.ul.fill,0,0);glyph(x,2,5,4,'#b8a8ff');});
 
 /* ---------- dünyalar ---------- */
 const WORLDS={
@@ -193,8 +197,13 @@ const WORLDS={
   stars:[[13,9],[14,8],[15,9],[25,7],[26,6],[27,7],[39,4],[40,3],[41,4],[50,9],[51,8],[52,9],[7,6],[21,5]],
   foes:[[19,11],[31,12],[45,10],[56,12]],cometV:[-.9,.6]}
 };
-const ORDER=['tk','ay'];
-const totalDust=()=>(save.best.tk||0)+(save.best.ay||0);
+WORLDS.ul={grav:.24,jump:-5.0,W:96,goal:92,
+  rects:[[0,12,9,3],[12,11,6,4],[21,10,5,5],[33,11,6,4],[42,9,5,6],[50,11,7,4],[72,12,24,3]],
+  stars:[[9,9],[10,8],[11,9],[18,8],[19,7],[20,8],[28,7],[29,7],[30,7],[39,8],[40,7],[47,6],[48,6],[58,7],[61,7],[64,7],[67,7],[76,9],[80,9]],
+  foes:[[15,10],[35,10],[53,10]],movers:[[26,10,3,26,30],[58,10,3,58,69]],boss:{x:86,arena:72},cometV:[-1.1,.9]};
+const ORDER=['tk','ay','ul'];
+const GRAVK={tk:'normal',ay:'low',ul:'mid'},CLEARK={tk:'clearTk',ay:'clearAy',ul:'clearUl'};
+const totalDust=()=>ORDER.reduce((a,k)=>a+(save.best[k]||0),0);
 
 /* ---------- ses ---------- */
 let AC=null,master=null;
@@ -203,9 +212,10 @@ function noteAt(f,t0,d,type,v,slide){if(!AC||!save.sound)return;const o=AC.creat
 function tone(f,d,type='square',v=.1,slide=0,delay=0){if(!AC)return;noteAt(f,AC.currentTime+delay,d,type,v,slide);}
 const SFX={jump:()=>tone(300,.15,'square',.06,300),slash:()=>tone(900,.1,'sawtooth',.05,-700),coin:()=>{tone(988,.06,'square',.06);tone(1319,.16,'square',.06,0,.06);},
  hit:()=>tone(220,.16,'square',.09,-150),hurt:()=>tone(240,.3,'sawtooth',.07,-160),die:()=>[440,370,311,293].forEach((f,i)=>tone(f,.18,'triangle',.1,0,i*.16)),
- clear:()=>[293.66,369.99,440,587.33,523.25,587.33].forEach((f,i)=>tone(f,.2,'triangle',.1,0,i*.13))};
+ boss:()=>tone(95,.45,'sawtooth',.12,-40),clear:()=>[293.66,369.99,440,587.33,523.25,587.33].forEach((f,i)=>tone(f,.2,'triangle',.1,0,i*.13))};
 const NT={A3:220,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33};
-const MELS={tk:['D4',0,'F4','A4','G4',0,'F4','E4','D4',0,'A3',0,'C4','D4','E4',0,'F4',0,'A4','C5','A4',0,'G4','F4','E4','D4','C4','E4','D4',0,0,0],
+const MELS={ul:['E4','G4','B4',0,'A4','G4','E4',0,'D4','E4','G4','A4','B4',0,'D5',0,'C5','B4','A4','G4','E4',0,'G4',0,'A4',0,0,0,'E4',0,0,0],
+ tk:['D4',0,'F4','A4','G4',0,'F4','E4','D4',0,'A3',0,'C4','D4','E4',0,'F4',0,'A4','C5','A4',0,'G4','F4','E4','D4','C4','E4','D4',0,0,0],
  ay:['A4',0,0,'E4','A4',0,'C5',0,'B4',0,'G4',0,'E4',0,0,0,'F4',0,0,'C4','F4',0,'A4',0,'G4',0,'E4',0,'D4',0,0,0]};
 let musOn=false,musStep=0,musNext=0;
 function startMusic(){if(!AC)return;musOn=true;musStep=0;musNext=AC.currentTime+.05;}
@@ -213,19 +223,19 @@ function musicTick(){if(!AC||!musOn||!save.sound||uiPaused())return;const ML=MEL
  while(musNext<AC.currentTime+.2){const n=ML[musStep%ML.length];if(n)noteAt(NT[n],musNext,st*.9,'triangle',.05);if(musStep%4===0)noteAt(73.42,musNext,st*1.8,'square',.02);musStep++;musNext+=st;}}
 
 /* ---------- dil (her açılışta ilk ekranda sorulur) ---------- */
-const APP_VER='0.2.0';
+const APP_VER='0.3.0';
 const AR_L='◀︎',AR_R='▶︎';
 const L10={
 tr:{share:'Arkadaşına öner',subtitle:'Yıldızlar arasında bir alp',map:'Gök Haritası',help:'Nasıl Oynanır',settings:'Ayarlar',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',toMap:'Haritaya dön',home:'Ana menü',
  langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',
  shareWin:'Paylaş',continue:'Devam',rateQ:'Gökalp\'i beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Metin kopyalandı',shareText:'Gökalp: kılıcı göktaşı demirinden bir alpin gökten göğe piksel yolculuğu. Bir Mr. Anduv! yapımı.',
- draft:'Taslak 0.2',dust:'Yıldız tozu',hp:'CAN',normal:'Yerçekimi: normal',low:'Yerçekimi: düşük',done:'✓ tamam',soon:'Yakında',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 ada · yakında',
+ draft:'Taslak 0.3',mid:'Yerçekimi: orta',clearUl:'Yelbegen yenildi! Ülker\'in yedi yıldızı yeniden parladı.',yel:'Yelbegen bekliyor!',boss:'YELBEGEN',dust:'Yıldız tozu',hp:'CAN',normal:'Yerçekimi: normal',low:'Yerçekimi: düşük',done:'✓ tamam',soon:'Yakında',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 ada · yakında',
  clearTk:'Temir Kazık\'a ulaştın! Gök yolu açıldı.',clearAy:'Hoca\'nın kuyusuna ulaştın! Ay Dede kuyudan kurtuldu.',gotDust:'Toplanan yıldız tozu',
  over1:'Yol bitmedi!',over2:'Gökalp yeniden doğrulur.',over3:'A: yeniden dene',ready:'Hazır ol!'},
 en:{share:'Tell a friend',subtitle:'A hero among the stars',map:'Sky Map',help:'How to Play',settings:'Settings',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',toMap:'Back to map',home:'Main menu',
  langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',
  shareWin:'Share',continue:'Continue',rateQ:'Enjoying Gökalp?',idea:'I have a suggestion',later:'Later',copied:'Text copied',shareText:'Gökalp: a pixel journey from sky to sky with a meteor-iron blade. A Mr. Anduv! game.',
- draft:'Draft 0.2',dust:'Star dust',hp:'HP',normal:'Gravity: normal',low:'Gravity: low',done:'✓ cleared',soon:'Coming soon',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 islands · coming soon',
+ draft:'Draft 0.3',mid:'Gravity: medium',clearUl:'Yelbegen is defeated! The seven stars of Ülker shine again.',yel:'Yelbegen awaits!',boss:'YELBEGEN',dust:'Star dust',hp:'HP',normal:'Gravity: normal',low:'Gravity: low',done:'✓ cleared',soon:'Coming soon',tk:'Temir Kazık',ay:'Ay Dede',ul:'Ülker',ulSub:'7 islands · coming soon',
  clearTk:'You reached Temir Kazık! The sky road is open.',clearAy:'You reached Hodja\'s well! The Moon is free.',gotDust:'Star dust collected',
  over1:'The road goes on!',over2:'Gökalp rises again.',over3:'A: try again',ready:'Get ready!'}};
 const TIPS={
@@ -234,14 +244,18 @@ tr:{kontrol:`<b>${AR_L} ${AR_R}</b> yürü · <b>A</b> zıpla (basılı tut: dah
  kuyruk:'<b>Kuyruklu yıldız</b> gökten iniyor! Yolundan çekil ya da kılıçla parçala.',
  toz:'<b>Yıldız tozu</b>: topla! Bütün gök yolunda 1923 tane var.',
  yercekimi:'<b>Güvercin:</b> Ay Dede\'de yerçekimi az. Havada uzun kalırsın, uzağa atlayabilirsin!',
- hedef:'<b>Hedef</b> göründü! Ulaşınca bu gök tamamlanır.'},
+ hedef:'<b>Hedef</b> göründü! Ulaşınca bu gök tamamlanır.',
+ asansor:'<b>Gök salı</b>: üstüne çık, seni bir adadan ötekine taşır.',
+ yelbegen:'<b>Güvercin:</b> <b>Yelbegen</b>! Başlarına kılıçla vur, her başa iki darbe. Attığı kayalara dikkat, kılıçla da kırılırlar.'},
 en:{kontrol:`<b>${AR_L} ${AR_R}</b> walk · <b>A</b> jump (hold: higher) · <b>B</b> sword`,
  golge:'<b>Dove:</b> That\'s an <b>Erlik shade</b>! Its touch hurts. Swing your sword with <b>B</b>.',
  kuyruk:'A <b>comet</b> is falling! Dodge it or smash it with your sword.',
  toz:'<b>Star dust</b>: collect it! There are 1923 along the sky road.',
  yercekimi:'<b>Dove:</b> Gravity is low on the Moon. You stay airborne longer and can leap far!',
- hedef:'The <b>goal</b> is in sight! Reach it to clear this sky.'}};
-const TIP_ORDER=['kontrol','golge','kuyruk','toz','yercekimi','hedef'];
+ hedef:'The <b>goal</b> is in sight! Reach it to clear this sky.',
+ asansor:'<b>Sky raft</b>: step on it to ride from one island to the next.',
+ yelbegen:'<b>Dove:</b> <b>Yelbegen</b>! Strike its heads with your sword, two blows each. Watch the rocks; your sword breaks them too.'}};
+const TIP_ORDER=['kontrol','golge','kuyruk','toz','yercekimi','asansor','yelbegen','hedef'];
 let LANG=save.lang||'tr';
 const t=k=>(L10[LANG][k]??L10.tr[k]??k);
 const seen=k=>save.rh.includes(k);
@@ -254,9 +268,8 @@ function refreshUI(){
  $('selDust').textContent=`✦ ${t('dust')}: ${totalDust()} / 1923`;
  const box=$('selRows');box.innerHTML='';
  ORDER.forEach(k=>{const w=WORLDS[k],b=document.createElement('button');b.className='mb wrow';b.type='button';
-  b.innerHTML=`<span class="n">${t(k)}</span><span class="s">${t(k==='tk'?'normal':'low')} · ✦ ${save.best[k]||0}/${w.stars.length}${save.cleared[k]?' · '+t('done'):''}</span>`;
+  b.innerHTML=`<span class="n">${t(k)}</span><span class="s">${t(GRAVK[k])} · ✦ ${save.best[k]||0}/${w.stars.length}${save.cleared[k]?' · '+t('done'):''}</span>`;
   b.addEventListener('click',()=>{initAudio();tone(660,.05,'square',.04);startGame(k);});box.appendChild(b);});
- const u=document.createElement('button');u.className='mb wrow';u.type='button';u.disabled=true;u.innerHTML=`<span class="n">${t('ul')}</span><span class="s">${t('ulSub')}</span>`;box.appendChild(u);
 }
 /* ---------- platform ---------- */
 const CAP=window.Capacitor,native=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
@@ -287,7 +300,9 @@ function coachTick(){
  if(!seen('golge')&&foes.some(f=>!f.dead&&onScr(f.x)))return showTip('golge');
  if(!seen('kuyruk')&&comets.some(c=>c.y>24&&onScr(c.x)))return showTip('kuyruk');
  if(!seen('toz')&&stars.some(s=>!s.got&&onScr(s.x)))return showTip('toz');
- if(!seen('hedef')&&onScr(cur.goal*T))return showTip('hedef');
+ if(!seen('asansor')&&movers.some(m=>onScr(m.x)))return showTip('asansor');
+ if(bossFight&&!seen('yelbegen'))return showTip('yelbegen');
+ if(!seen('hedef')&&(!cur.boss||(boss&&boss.dead))&&onScr(cur.goal*T))return showTip('hedef');
 }
 function showTip(k){coachOn=true;$('coachTxt').innerHTML=TIPS[LANG][k];$('coachOk').hidden=false;$('coach').classList.remove('soft');$('coach').hidden=false;$('coach').dataset.k=k;tone(880,.08,'triangle',.05);odakSifirla();}
 function coachHide(){$('coach').hidden=true;coachOn=false;}
@@ -304,7 +319,7 @@ function feedback(){const body=`Gökalp ${APP_VER} · ${platformName()} · ${LAN
 function askRate(){try{CAP.Plugins.InAppReview.requestReview();}catch(e){}save.rated=true;persist();}
 const rateEligible=()=>canRate()&&!save.rated&&(save.rateAsked||0)<2;
 function afterWin(){hide('ovWin');if(rateEligible()){save.rateAsked=(save.rateAsked||0)+1;persist();show('rateBox');}else goMap();}
-function showWin(){$('winTtl').textContent=t(lvKey);$('winTxt').textContent=t(lvKey==='tk'?'clearTk':'clearAy')+' '+t('gotDust')+': '+levelDust+' / '+stars.length;show('ovWin');}
+function showWin(){$('winTtl').textContent=t(lvKey);$('winTxt').textContent=t(CLEARK[lvKey])+' '+t('gotDust')+': '+levelDust+' / '+stars.length;show('ovWin');}
 /* ---------- düğmeler ---------- */
 const on=(id,f)=>$(id).addEventListener('click',()=>{initAudio();tone(660,.05,'square',.04);f();});
 on('lTr',()=>{save.lang=LANG='tr';persist();applyLang();hide('ovLang');goTitle();});
@@ -323,7 +338,7 @@ on('setErase',()=>{if(!eraseArm){eraseArm=true;refreshUI();setTimeout(()=>{erase
 on('setOk',()=>{hide('ovSet');if(retTo){show(retTo);retTo=null;}});
 on('hReset',()=>{save.rh=[];persist();toast(t('guideReset'));});
 on('hOk',()=>{hide('ovHelp');if(retTo){show(retTo);retTo=null;}});
-on('wShare',()=>shareGame(t(lvKey==='tk'?'clearTk':'clearAy')));on('wGo',()=>afterWin());
+on('wShare',()=>shareGame(t(CLEARK[lvKey])));on('wGo',()=>afterWin());
 on('rYes',()=>{askRate();goMap();});on('rIdea',()=>{feedback();goMap();});on('rLater',()=>goMap());
 /* ---------- giriş: klasik kumanda + klavye + oyun kolu (Tulpar'dan) ---------- */
 const inp={left:0,right:0,up:0,down:0,a:0,b:0};let prev={a:0,b:0};
@@ -418,12 +433,15 @@ function yerlesTekrar(){yerles();requestAnimationFrame(yerles);[60,250,700,1500]
 addEventListener('resize',yerlesTekrar);addEventListener('orientationchange',yerlesTekrar);if(window.visualViewport)visualViewport.addEventListener('resize',yerlesTekrar);
 
 /* ---------- oyun durumu ---------- */
+let movers=[],boss=null,rocks=[],bossFight=false,shake=0;
 let state='title',stateT=0,frame=0,lvKey='tk',cur=WORLDS.tk,grid=[],pl=null,foes=[],stars=[],comets=[],parts=[],dove={x:0,y:0},cam=0,titleCam=0,lives=3,levelDust=0,cometT=0;
 function startLevel(k){lvKey=k;cur=WORLDS[k];grid=[];for(let y=0;y<15;y++)grid.push(new Array(cur.W).fill(0));
  cur.rects.forEach(([x,y,w,h])=>{for(let j=y;j<y+h&&j<15;j++)for(let i=x;i<x+w&&i<cur.W;i++)grid[j][i]=1;});
  stars=cur.stars.map(([x,y])=>({x:x*T+3,y:y*T+3,got:false}));
  foes=cur.foes.map(([x,y],i)=>({x0:x*T+2,y0:y*T+3,x:x*T+2,y:y*T+3,t:i*40,dead:false}));
  comets=[];parts=[];pl={x:32,y:13*T-22,w:10,h:22,vx:0,vy:0,face:1,onG:false,atk:0,inv:0,kb:0,kbDir:1,hp:6,buf:0,coy:0,jh:0,anim:0,jumped:false,swung:false};
+ movers=(cur.movers||[]).map(([x,y,w,a,b])=>({x:x*T,y:y*T,w:w*T,a:a*T,b:b*T,vx:.7,dx:0}));rocks=[];bossFight=false;shake=0;
+ boss=cur.boss?{x:cur.boss.x*T,y:12*T-40,w:28,h:40,hp:6,inv:0,face:-1,anim:0,t:0,vy:0,dead:false}:null;
  dove={x:10,y:160};cam=0;levelDust=0;cometT=240;state='intro';stateT=0;coachSoft=false;coachHide();}
 function solid(px,py){const tx=Math.floor(px/T),ty=Math.floor(py/T);if(tx<0||tx>=cur.W)return true;if(ty<0||ty>=15)return false;return grid[ty][tx]===1;}
 function moveX(){pl.x+=pl.vx;
@@ -438,6 +456,20 @@ function die(){if(state!=='play')return;state='dying';stateT=0;pl.vy=-5;musOn=fa
 function hurt(fx){if(pl.inv>0)return;pl.hp--;pl.inv=70;pl.kb=12;pl.kbDir=pl.x<fx?-1:1;pl.vy=-2.5;if(pl.hp<=0){die();return;}SFX.hurt();}
 function swordBox(){return pl.face>0?{x:pl.x+pl.w,y:pl.y-4,w:22,h:30}:{x:pl.x-22,y:pl.y-4,w:22,h:30};}
 
+function updateBoss(pb,sb){if(!boss||boss.dead)return;const b=boss;
+ if(!bossFight){if(pl.x>cur.boss.arena*T+32){bossFight=true;SFX.boss();shake=24;}return;}
+ b.t++;b.anim++;if(b.inv>0)b.inv--;b.face=pl.x<b.x?-1:1;
+ const dist=Math.abs(pl.x-b.x);b.x+=(dist>48?.55:-.35)*b.face;
+ b.vy+=.3;b.y+=b.vy;if(b.y+b.h>=12*T){b.y=12*T-b.h;b.vy=0;if(b.t%170===0){b.vy=-5.2;}}
+ b.x=Math.max(cur.boss.arena*T+6,Math.min((cur.W-2)*T-b.w,b.x));
+ if(b.t%(b.hp<=2?70:105)===0){rocks.push({x:b.x+14,y:b.y+2,vx:Math.max(-2.6,Math.min(2.6,(pl.x-b.x)/55)),vy:-4.2});SFX.hit();}
+ for(const r of rocks){r.x+=r.vx;r.vy+=.18;r.y+=r.vy;const rb={x:r.x-4,y:r.y-4,w:8,h:8};
+  if(sb&&ov(sb,rb)){r.dead=true;burst(r.x,r.y,'#a09080',8);SFX.hit();}else if(ov(pb,rb)){r.dead=true;burst(r.x,r.y,'#a09080',6);hurt(r.x);if(state!=='play')return;}}
+ rocks=rocks.filter(r=>!r.dead&&r.y<H+10);
+ const bb={x:b.x,y:b.y,w:b.w,h:b.h};
+ if(sb&&b.inv<=0&&ov(sb,bb)){b.hp--;b.inv=34;shake=8;SFX.hit();burst(b.x+14,b.y+8,'#e8dcc0',10);
+  if(b.hp<=0){b.dead=true;bossFight=false;rocks=[];shake=30;burst(b.x+14,b.y+16,'#f0c040',30);burst(b.x+14,b.y+16,'#b070ff',20);SFX.clear();}}
+ else if(!b.dead&&ov(pb,bb))hurt(b.x+14);}
 function updatePlay(E){
  const dir=(inp.right?1:0)-(inp.left?1:0);
  if(pl.kb>0){pl.vx=pl.kbDir*2;pl.kb--;}
@@ -449,7 +481,13 @@ function updatePlay(E){
  pl.vy=Math.min(pl.vy+g,7);
  if(E.bP&&pl.atk<=0){pl.atk=14;pl.swung=true;SFX.slash();}
  if(pl.atk>0)pl.atk--;if(pl.inv>0)pl.inv--;
- moveX();moveY();pl.anim+=Math.abs(pl.vx)>.2?1:0;
+ for(const m of movers){const ox=m.x;m.x+=m.vx;if(m.x<m.a){m.x=m.a;m.vx=Math.abs(m.vx);}if(m.x>m.b){m.x=m.b;m.vx=-Math.abs(m.vx);}m.dx=m.x-ox;}
+ if(pl.mover)pl.x+=pl.mover.dx;
+ moveX();if(bossFight&&pl.x<cur.boss.arena*T){pl.x=cur.boss.arena*T;pl.vx=0;}
+ const prevB=pl.y+pl.h;moveY();pl.mover=null;
+ if(pl.vy>=0)for(const m of movers){if(pl.x+pl.w>m.x+1&&pl.x<m.x+m.w-1&&prevB<=m.y+1&&pl.y+pl.h>=m.y){pl.y=m.y-pl.h;pl.vy=0;pl.onG=true;pl.mover=m;break;}}
+ pl.anim+=Math.abs(pl.vx)>.2?1:0;
+ if(shake>0)shake--;
  if(pl.y>H+30){die();return;}
  const pb={x:pl.x,y:pl.y,w:pl.w,h:pl.h},sb=pl.atk>3?swordBox():null;
  for(const s of stars)if(!s.got&&ov(pb,{x:s.x,y:s.y,w:10,h:10})){s.got=true;levelDust++;SFX.coin();burst(s.x+5,s.y+5,'#f0c040',6);}
@@ -461,8 +499,9 @@ function updatePlay(E){
   if(sb&&ov(sb,cb)){c.dead=true;SFX.hit();burst(c.x,c.y,'#f08020',10);}else if(ov(pb,cb)){c.dead=true;burst(c.x,c.y,'#f08020',8);hurt(c.x);if(state!=='play')return;}}
  comets=comets.filter(c=>!c.dead&&c.y<H+10);
  const tx=pl.x-pl.face*16,ty=pl.y-18+Math.sin(frame*.1)*3;dove.x+=(tx-dove.x)*.08;dove.y+=(ty-dove.y)*.08;
- cam=Math.max(0,Math.min(pl.x-W*.42,cur.W*T-W));
- if(pl.x+pl.w>=cur.goal*T){state='clear';stateT=0;musOn=false;pl.vx=0;save.cleared[lvKey]=true;save.best[lvKey]=Math.max(save.best[lvKey]||0,levelDust);persist();SFX.clear();burst(cur.goal*T+8,13*T-100,'#f0c040',24);}
+ updateBoss(pb,sb);if(state!=='play')return;
+ cam=Math.max(bossFight?cur.boss.arena*T:0,Math.min(pl.x-W*.42,cur.W*T-W));
+ if(pl.x+pl.w>=cur.goal*T&&(!boss||boss.dead)){state='clear';stateT=0;musOn=false;pl.vx=0;save.cleared[lvKey]=true;save.best[lvKey]=Math.max(save.best[lvKey]||0,levelDust);persist();SFX.clear();burst(cur.goal*T+8,13*T-100,'#f0c040',24);}
  coachTick();
 }
 function update(){frame++;
@@ -489,8 +528,23 @@ function bgTk(c,top){const g=ctx.createLinearGradient(0,-top,0,H);g.addColorStop
 function pixCircle(cx,cy,r,col){for(let y=-r;y<=r;y++){const w=Math.floor(Math.sqrt(r*r-y*y));R(cx-w,cy+y,w*2+1,1,col);}}
 function bgAy(c,top){R(0,-top,W,VH,'#04040c');starfield(c,top);const ex=W-46-Math.round(c*.02),ey=44-Math.round(top*.5);
  pixCircle(ex,ey,17,'#2a62c8');R(ex-9,ey-8,7,5,'#3aa050');R(ex-4,ey-3,5,6,'#3aa050');R(ex+4,ey+2,8,4,'#3aa050');R(ex-12,ey+6,9,2,'#e8f0ff');R(ex+2,ey-12,8,2,'#e8f0ff');}
-function drawGoal(c){const gx=cur.goal*T-c,gy=13*T;
+function drawBoss(e,sx){const y=Math.round(e.y),x=sx;const fl=e.inv>0&&(frame>>2)%2;const body=fl?'#fff':'#4d5a44',dark=fl?'#ddd':'#2f3a2a',skin=fl?'#fff':'#8a9a72';
+ const step=(e.anim>>4)%2;R(x+5,y+30,7,10-step*2,dark);R(x+16,y+30,7,8+step*2,dark);R(x+2,y+12,24,20,body);R(x+2,y+24,24,3,'#7a1f1a');R(x+-3,y+14,5,12,body);R(x+26,y+14,5,12,body);
+ const cx=e.face>0?x+30:x-8;R(cx,y+4,4,22,'#6a4426');R(cx-2,y+2,8,6,'#5a3820');
+ const heads=[[x+0,y+2],[x+18,y+2],[x+9,y-4]];const alive=[e.hp>=3,e.hp>=2,e.hp>=1];
+ heads.forEach(([hx,hy],i)=>{if(!alive[i]){R(hx+3,hy+8,4,3,dark);return;}R(hx+3,hy+8,4,4,body);R(hx,hy,10,10,skin);R(hx,hy-3,2,3,'#e8dcc0');R(hx+8,hy-3,2,3,'#e8dcc0');R(hx+2,hy+3,2,2,'#ff3020');R(hx+6,hy+3,2,2,'#ff3020');R(hx+2,hy+7,6,1,'#1a1010');R(hx+3,hy+8,1,1,'#fff');R(hx+6,hy+8,1,1,'#fff');});}
+// Yelbegen: Tulpar'daki çizimin aynısı (konturlu ve gölgeli)
+const BCV=document.createElement('canvas');BCV.width=60;BCV.height=64;const BCX=BCV.getContext('2d');
+function drawBossHD(e,sx){const main=ctx;ctx=BCX;BCX.setTransform(1,0,0,1,0,0);BCX.clearRect(0,0,60,64);const f=Object.assign({},e,{y:14});drawBoss(f,14);ctx=main;
+ const id=BCX.getImageData(0,0,60,64),d=id.data,o=new Uint8ClampedArray(d);for(let y=0;y<64;y++)for(let x=0;x<60;x++){const i=(y*60+x)*4;if(o[i+3])continue;
+  const n=(X,Y)=>X>=0&&Y>=0&&X<60&&Y<64&&o[(Y*60+X)*4+3]>0;if(n(x-1,y)||n(x+1,y)||n(x,y-1)||n(x,y+1)){d[i]=22;d[i+1]=14;d[i+2]=12;d[i+3]=255;}}
+ BCX.putImageData(id,0,0);polish(BCV);ctx.drawImage(BCV,sx-14,Math.round(e.y)-14);}
+function bgUl(c,top){const g=ctx.createLinearGradient(0,-top,0,H);g.addColorStop(0,'#0e0822');g.addColorStop(1,'#2e1c52');ctx.fillStyle=g;ctx.fillRect(0,-top,W,VH);starfield(c,top);
+ const px=W-70-Math.round(c*.03),py=30-Math.round(top*.5);[[0,0,3],[11,-5,2],[20,1,3],[6,8,2],[15,11,2],[26,-3,2],[22,15,2]].forEach(([dx,dy,r],i)=>bigStar(px+dx,py+dy,r+((frame>>4)+i)%2,i%2?'#d8d0ff':'#fff0b0'));
+ for(let i=0;i<9;i++){const x=Math.round(((i*137-c*.35)%(W+120)+W+120)%(W+120))-60,y=120+(i*53)%70;R(x,y,40,6,'#251846');R(x+6,y+6,28,5,'#1e1338');R(x+14,y+11,12,4,'#180f2e');}}
+function drawGoal(c){if(boss&&!boss.dead)return;const gx=cur.goal*T-c,gy=13*T;
  if(lvKey==='tk'){R(gx+4,gy-96,8,96,'#5b6684');for(let y=gy-90;y<gy;y+=12)R(gx+4,y,8,1,'#2e3850');R(gx+3,gy-60,10,2,'#f0c040');R(gx+3,gy-30,10,2,'#f0c040');bigStar(gx+8,gy-106,7+Math.round(Math.sin(frame*.1)*2),'#f0c040');}
+ else if(lvKey==='ul'){const y0=12*T;R(gx+2,y0-14,24,14,'#6a5a92');R(gx,y0-16,28,3,'#d8d0ff');[[0,0],[-7,-6],[7,-6],[-10,4],[10,4],[-4,10],[4,10]].forEach(([dx,dy],i)=>bigStar(gx+14+dx,y0-48+dy,2+((frame>>3)+i)%2,i?'#fff0b0':'#ffffff'));}
  else{R(gx+1,gy-40,3,22,'#6a4a2a');R(gx+24,gy-40,3,22,'#6a4a2a');R(gx-2,gy-42,32,3,'#6a4a2a');R(gx+13,gy-39,1,14,'#c8b080');R(gx+11,gy-26,5,4,'#6a4a2a');
   R(gx,gy-18,28,18,'#7c808c');for(let i=0;i<4;i++)R(gx+1+i*7,gy-17,6,5,'#a4a8b4');for(let i=0;i<4;i++)R(gx+4+i*7,gy-10,5,5,'#a4a8b4');
   R(gx+2,gy-20,24,3,'#101018');R(gx+11,gy-20,4,1,'#fff6c0');R(gx+10,gy-19,2,1,'#fff6c0');}}
@@ -506,20 +560,25 @@ function drawHero(px,py,face,kind,atk){const img=HERO[kind][face],dx=Math.round(
 function drawHUD(){R(0,0,W,15,'rgba(5,8,26,.78)');R(0,15,W,1,'#b8902e');txt(t('hp'),5,3,'#fff');for(let i=0;i<6;i++)R(30+i*7,4,5,8,i<pl.hp?'#e03a2a':'#3a2020');
  bigStar(Math.round(W/2)-26,8,3,'#f0c040');txt(String(totalDust()+levelDust).padStart(4,'0')+' / 1923',Math.round(W/2)-18,3,'#f0c040');ctx.drawImage(HEAD,W-30,3);txt('× '+Math.max(0,lives),W-18,3,'#fff');}
 function drawWorld(){const c=Math.round(cam),top=VH-H;ctx.save();ctx.translate(0,top);
- if(lvKey==='tk')bgTk(c,top);else bgAy(c,top);drawTiles(c);drawGoal(c);
+ if(shake>0)ctx.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*3));
+ if(lvKey==='tk')bgTk(c,top);else if(lvKey==='ul')bgUl(c,top);else bgAy(c,top);drawTiles(c);drawGoal(c);
+ for(const m of movers){const x=Math.round(m.x-c);R(x,m.y,m.w,4,'#d8d0ff');R(x,m.y+4,m.w,3,'#6a5a92');R(x+4,m.y+7,m.w-8,2,'#3a2c5e');}
  for(const s of stars){if(s.got)continue;const x=s.x-c+5,y=s.y+5+Math.round(Math.sin(frame*.1+s.x));const r=2+((frame>>3)+s.x)%2;R(x-r,y,r*2+1,1,'#f0c040');R(x,y-r,1,r*2+1,'#f0c040');R(x,y,1,1,'#fff');}
  for(const f of foes)if(!f.dead)ctx.drawImage(GOLGE,Math.round(f.x-c),Math.round(f.y));
+ if(boss&&!boss.dead)drawBossHD(Object.assign({},boss,{hp:Math.ceil(boss.hp/2)}),Math.round(boss.x-c));
+ for(const r of rocks){R(r.x-c-4,r.y-4,8,8,'#5a4e44');R(r.x-c-3,r.y-3,4,3,'#8a7e70');}
  for(const k of comets){for(let i=6;i>0;i--){ctx.globalAlpha=.15*(7-i);R(k.x-c-i*k.vx*3-1,k.y-i*k.vy*3-1,3,3,i>3?'#f08020':'#ffd040');}ctx.globalAlpha=1;R(k.x-c-2,k.y-2,5,5,'#fff6d0');}
  if(!(pl.inv>0&&(frame>>2)%2&&state==='play'))drawHero(pl.x-c,pl.y,pl.face,(state==='dying'||!pl.onG)?'j':(Math.abs(pl.vx)>.2?((pl.anim>>3)%2?'a':'b'):'a'),state==='play'?pl.atk:0);
  ctx.drawImage(DOVE[pl.face][(frame>>3)%2],Math.round(dove.x-c),Math.round(dove.y));
  for(const q of parts){ctx.globalAlpha=Math.min(1,q.l/15);R(q.x-c,q.y,2,2,q.c);}ctx.globalAlpha=1;
- ctx.restore();drawHUD();}
+ ctx.restore();drawHUD();
+ if(bossFight&&boss){R(W/2-60,19,120,11,'rgba(5,8,26,.8)');txt(t('boss'),W/2-56,20,'#e07a5a',8);for(let i=0;i<6;i++)R(W/2-2+i*9,21,7,7,i<boss.hp?'#e07a5a':'#3a2020');}}
 function drawTitle(){const top=VH-H,c=Math.round(titleCam);ctx.save();ctx.translate(0,top);bgTk(c,top);const TT=TILES.tk;
  for(let i=0;i<=Math.ceil(W/16);i++){const x=i*16-(c%16);ctx.drawImage(TT.top,x,208);ctx.drawImage(TT.fill,x,224);}
  const mx=28;ctx.drawImage(TT.top,mx,192);ctx.drawImage(TT.top,mx+16,192);drawHero(mx+6,170,1,'a',0);
  ctx.drawImage(DOVE[1][(frame>>3)%2],mx-12,152+Math.round(Math.sin(frame*.08)*3));ctx.restore();}
 function drawCard(){R(0,0,W,VH,'#05081a');const cy=Math.round(VH/2);
- if(state==='intro'){txt(t(lvKey),W/2,cy-50,'#e0b048',16,'center',true);txt(t(lvKey==='tk'?'normal':'low'),W/2,cy-28,'#8fa3c8',8,'center');
+ if(state==='intro'){txt(t(lvKey),W/2,cy-50,'#e0b048',16,'center',true);txt(t(GRAVK[lvKey]),W/2,cy-28,'#8fa3c8',8,'center');if(cur.boss)txt(t('yel'),W/2,cy+58,'#e07a5a',8,'center');
   ctx.drawImage(HEAD,W/2-22,cy-6);txt('× '+lives,W/2-8,cy-5,'#eef2fb',9);bigStar(W/2-24,cy+24,3,'#f0c040');txt(String(totalDust()).padStart(4,'0')+' / 1923',W/2-16,cy+19,'#f0c040',8);
   txt(t('ready'),W/2,cy+44,'#eef2fb',8,'center');}
  else{txt(t('over1'),W/2,cy-40,'#e0b048',16,'center',true);txt(t('over2'),W/2,cy-14,'#eef2fb',8,'center');if((frame>>5)%2&&stateT>40)txt(t('over3'),W/2,cy+12,'#fff6d0',9,'center');}}
