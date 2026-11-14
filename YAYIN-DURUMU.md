@@ -3,6 +3,7 @@
 Fiyat her mağazada **1,99 $** (ücretli uygulama; reklam ve uygulama içi satın alma yok). Ad her mağazada aynı: **Gökalp**.
 
 ## Hazır olanlar
+- Görsel yenileme (15 Kasım 2026, Mr. Anduv! Görsel Kayıt Defteri çizgisi): piksel kareler yerine konturlu, gölgeli, ışıklı çizgi film çizimleri — Gökalp, mekanik güvercin, Erlik gölgeleri, yıldız tozu, kuyruklu yıldızlar, Yelbegen, Tepegöz, Van Gölü Canavarı, Van kedisi, han ateşleri, karolar, 7 dünyanın boyalı gökleri, HUD, başlık ve kart; ayrıca Ülker ve Yedigen'de her karede çöken çizim hatası giderildi. Yazı tipi Pixelify yerine Bungee + Rubik (internetsiz, `www/fonts`). Kaynak: `www/gorsel.js` (index.html'e gömülü). Mağaza ekran görüntüleri yeni görünümle yeniden çekilecek.
 - Oyun taslağı 0.4: Temir Kazık (normal yerçekimi), Ay Dede (düşük yerçekimi), Ülker (orta yerçekimi, 7 ada, gök salları, boss Yelbegen) Yedigen (ağır yerçekimi, 7 han ateşi = ara kayıt, boss Tepegöz), Çolpan (hafif yerçekimi, ışık taşları ve ışık köprüleri) Gök Göl (yüzme, su altı yolları, inci kefalleri, boss Van Gölü Canavarı, Van kedisi) ve Kapadokya (peribacaları, karanlık yeraltı şehri, sıcak hava balonları) dünyaları; dünyalar sırayla açılır, kılıç, Erlik gölgeleri, kuyruklu yıldızlar, yıldız tozu (hedef 1923), mekanik güvercin rehberi, Gök Haritası
 - Tulpar'dan gelen kabuk: klasik kumanda (Kurt Yolu ölçüsü), dil sorusu her açılışta, Nasıl Oynanır, Ayarlar (dil, ses, puan, Bize yaz, Verilerimi sil), Mola, paylaş, oyun kolu ve klavye
 - Capacitor projesi: Android ve iOS `com.anduv.gokalp`, ikonlar ve açılış ekranları üretildi
