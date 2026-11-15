@@ -998,5 +998,6 @@ function boot(){applyLang();yerlesTekrar();show('ovLang');requestAnimationFrame(
 (document.fonts&&document.fonts.load?Promise.race([Promise.all([document.fonts.load('500 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('800 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('8px "Bungee"','TULPARGÖKALPİŞĞÇÖÜ')]),new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot,boot);
 })();
 </script>
+<script>/* çevrimdışı: GitHub Pages'te bir kez açılınca uçakta da oynanır */if('serviceWorker'in navigator&&location.protocol==='https:'&&!window.Capacitor&&/github\.io$/.test(location.hostname))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>
 </html>
