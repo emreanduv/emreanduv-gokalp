@@ -999,5 +999,6 @@ function boot(){applyLang();yerlesTekrar();show('ovLang');requestAnimationFrame(
 })();
 </script>
 <script>/* çevrimdışı: GitHub Pages'te bir kez açılınca uçakta da oynanır */if('serviceWorker'in navigator&&location.protocol==='https:'&&!window.Capacitor&&/github\.io$/.test(location.hostname))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script>/* Ekran uyanık kalsın (web, PWA, VR tarayıcı): dokunulmasa da kararmasın */(function(){var k=null;function al(){try{if(!k&&navigator.wakeLock&&document.visibilityState==='visible')navigator.wakeLock.request('screen').then(function(x){k=x;x.addEventListener('release',function(){k=null;});}).catch(function(){});}catch(e){}}['pointerdown','keydown','touchend'].forEach(function(e){addEventListener(e,al,{passive:true});});document.addEventListener('visibilitychange',al);al();})();</script>
 </body>
 </html>
