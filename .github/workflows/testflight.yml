@@ -1,0 +1,22 @@
+name: TestFlight (testçilere gönder)
+on:
+  workflow_dispatch:
+    inputs:
+      not:
+        description: "Test edenlere not (boşsa varsayılan)"
+        default: ""
+env:
+  ASC_KEY_ID: DJSHKK6T3P
+  ASC_ISSUER_ID: f4943ef8-df6f-42c8-a561-58554097ea35
+jobs:
+  gonder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Anahtar
+        env: { P8: "${{ secrets.ASC_KEY_P8 }}" }
+        run: mkdir -p ~/private_keys && printf '%s' "$P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+      - run: pip3 install --quiet pyjwt cryptography
+      - env: { NOT: "${{ inputs.not }}" }
+        run: python3 araclar/asc_testflight.py
